@@ -265,49 +265,26 @@
             });
         }
 
-        // 🛠️ ATURAN LOGIKA MAJU TANGGAL BARU (KUNCI BEBERAPA SURAT SAMA)
-        function hitungTanggalMajuSpesifik(startDateStr, idSuratArray, jedaArray) {
+        // 🛠️ LOGIKA BARU: SETIAP BARIS BERDIRI SENDIRI MENGIKUTI JEDA DARI BARIS DI ATASNYA MURNI
+        function hitungTanggalMajuMurni(startDateStr, jedaArray) {
             let results = [];
             let current = new Date(startDateStr);
             
-            // Variabel penyimpan tanggal kunci bersama
-            let tanggalSpkDanPembelian = null;
-            let tanggalGrupSuratJalan = null;
-
-            idSuratArray.forEach((idSurat, idx) => {
-                let jeda = jedaArray[idx];
-
+            jedaArray.forEach((jeda, idx) => {
                 if (idx === 0) {
+                    // Berkas pertama selalu mengikuti tanggal input acuan (skip hari libur jika pas libur)
                     while (periksaStatusHari(current).libur) { current.setDate(current.getDate() + 1); }
                     results.push(new Date(current));
-                } 
-                // A. Kunci Tanggal SPK & Pembelian agar selalu SAMA
-                else if (idSurat === 'beli' && tanggalSpkDanPembelian !== null) {
-                    results.push(new Date(tanggalSpkDanPembelian));
-                } 
-                // B. Kunci Tanggal Surat-Surat Logistik agar selalu SAMA dengan SURAT JALAN
-                else if (['faktur', 'kw', 'bast_rek', 'bast_sek', 'bapb'].includes(idSurat) && tanggalGrupSuratJalan !== null) {
-                    results.push(new Date(tanggalGrupSuratJalan));
-                } 
-                // C. Jika membutuhkan Jeda Mandiri (Normal / Maju Hari)
-                else {
+                } else {
+                    // Maju sebanyak jeda hari kerja dari tanggal baris sebelumnya
                     let sisa = jeda;
                     while (sisa > 0) {
                         current.setDate(current.getDate() + 1);
                         if (!periksaStatusHari(current).libur) sisa--;
                     }
+                    // Pastikan tidak mendarat di hari libur
                     while (periksaStatusHari(current).libur) { current.setDate(current.getDate() + 1); }
-                    
-                    let computedDate = new Date(current);
-                    results.push(computedDate);
-
-                    // Ikat tanggal acuan grup setelah dihitung
-                    if (idSurat === 'spk') {
-                        tanggalSpkDanPembelian = new Date(computedDate);
-                    }
-                    if (idSurat === 'sj') {
-                        tanggalGrupSuratJalan = new Date(computedDate);
-                    }
+                    results.push(new Date(current));
                 }
             });
             return results;
@@ -325,13 +302,13 @@
             { idSurat: "nego", nama: "Nego", tipe: "sekolah", urutanKunci: 5, hapusDiBawah10Jt: false },
             { idSurat: "sppbj", nama: "Surat Penunjukan Penyedia Barang/Jasa (SPPBJ)", tipe: "sekolah", urutanKunci: 6, hapusDiBawah10Jt: true },
             { idSurat: "spk", nama: "Surat Perintah Kerja (SPK)", tipe: "sekolah", urutanKunci: 7 },
-            { idSurat: "beli", nama: "Pembelian", tipe: "sekolah", urutanKunci: 8, kunciBeliDanSpk: true },
-            { idSurat: "sj", nama: "Surat Jalan", tipe: "rekanan", urutanKunci: 9, kontrolJedaGrup: true }, 
-            { idSurat: "faktur", nama: "Faktur", tipe: "rekanan", urutanKunci: 10, kunciGrupSj: true },
-            { idSurat: "kw", nama: "Kwitansi", tipe: "rekanan", urutanKunci: 11, kunciGrupSj: true },
-            { idSurat: "bast_rek", nama: "BAST Rekanan Sekolah", tipe: "rekanan", urutanKunci: 12, kunciGrupSj: true },
-            { idSurat: "bast_sek", nama: "BAST Sekolah", tipe: "sekolah", urutanKunci: 13, kunciGrupSj: true },
-            { idSurat: "bapb", nama: "BAPB Sekolah", tipe: "sekolah", urutanKunci: 14, kunciGrupSj: true }
+            { idSurat: "beli", nama: "Pembelian", tipe: "sekolah", urutanKunci: 8 },
+            { idSurat: "sj", nama: "Surat Jalan", tipe: "rekanan", urutanKunci: 9 }, 
+            { idSurat: "faktur", nama: "Faktur", tipe: "rekanan", urutanKunci: 10 },
+            { idSurat: "kw", nama: "Kwitansi", tipe: "rekanan", urutanKunci: 11 },
+            { idSurat: "bast_rek", nama: "BAST Rekanan Sekolah", tipe: "rekanan", urutanKunci: 12 },
+            { idSurat: "bast_sek", nama: "BAST Sekolah", tipe: "sekolah", urutanKunci: 13 },
+            { idSurat: "bapb", nama: "BAPB Sekolah", tipe: "sekolah", urutanKunci: 14 }
         ];
 
         function prosesGenerate() {
@@ -358,11 +335,9 @@
             let startRekananNo = parseInt(noRekananStr, 10);
             let templateFiltered = MASTER_SURAT_EXCEL.filter(x => !(kategori === 'bawah' && x.hapusDiBawah10Jt));
             
-            // Set jeda default
-            let jedaDefault = templateFiltered.map((surat, i) => {
-                if (i === 0 || surat.kunciBeliDanSpk || surat.kunciGrupSj) return 0;
-                return 1; // Default jeda maju 1 hari untuk yang tidak dikunci
-            });
+            // Default jeda awal: Baris 1 = 0, sisanya maju 1 hari kerja agar rapi di awal.
+            // Nanti user bebas mengubah masing-masing baris menjadi +0 atau berapa saja.
+            let jedaDefault = templateFiltered.map((surat, i) => (i === 0) ? 0 : 1);
 
             window.listAntreanToko.push({
                 uniqueId: Date.now() + Math.random().toString(36).substr(2, 5),
@@ -383,8 +358,7 @@
             if (idxToko === -1) return;
             let pkg = window.listAntreanToko[idxToko];
             
-            // Hanya izinkan ubah jeda jika bukan file yang dikunci otomatis
-            if (index === 0 || pkg.template[index].kunciBeliDanSpk || pkg.template[index].kunciGrupSj) return;
+            if (index === 0) return; // Baris acuan utama tidak boleh di-jeda
             
             pkg.jeda[index] = Math.max(0, pkg.jeda[index] + nilai);
             triggerPushCloud();
@@ -403,8 +377,7 @@
             let semuaSuratSekolahMurni = [];
 
             window.listAntreanToko.forEach((pkg) => {
-                let idSuratList = pkg.template.map(x => x.idSurat);
-                let tglList = hitungTanggalMajuSpesifik(pkg.tglAcuan, idSuratList, pkg.jeda);
+                let tglList = hitungTanggalMajuMurni(pkg.tglAcuan, pkg.jeda);
                 
                 pkg.template.forEach((surat, idx) => {
                     if (surat.tipe === 'sekolah') {
@@ -452,8 +425,7 @@
             });
 
             window.listAntreanToko.forEach((pkg, indexToko) => {
-                let idSuratList = pkg.template.map(x => x.idSurat);
-                let tglList = hitungTanggalMajuSpesifik(pkg.tglAcuan, idSuratList, pkg.jeda);
+                let tglList = hitungTanggalMajuMurni(pkg.tglAcuan, pkg.jeda);
                 let runningRekananCounter = pkg.startRekananNo;
 
                 let rowsHtml = pkg.template.map((surat, idx) => {
@@ -461,21 +433,16 @@
                     let checkRealDate = periksaStatusHari(tglList[idx]);
                     let isRedText = checkRealDate.libur;
 
-                    // UI Teks Keterangan Jeda Atur Manual
                     let kontrolJedaHtml = "";
                     if (idx === 0) {
                         kontrolJedaHtml = `<span class="text-slate-500 text-[11px]">Acuan Utama</span>`;
-                    } else if (surat.idSurat === 'beli') {
-                        kontrolJedaHtml = `<span class="text-cyan-500 font-medium text-[11px]">🔒 Sama dengan SPK</span>`;
-                    } else if (surat.kunciGrupSj) {
-                        kontrolJedaHtml = `<span class="text-purple-400 font-medium text-[11px]">🔒 Sama dengan Srt Jalan</span>`;
                     } else {
-                        // Tombol Jeda Aktif (bisa diubah di Surat Jalan atau surat bebas lainnya)
+                        // SEMUA BARIS BISA DI-EDIT JEDANYA (+/-) MURNI MANDIRI
                         kontrolJedaHtml = `
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, -1)" class="w-5 h-5 bg-slate-700 rounded text-red-400 font-bold">-</button>
-                                <span class="bg-slate-900 px-2 py-0.5 rounded text-xs font-bold min-w-[45px] text-amber-400">+${pkg.jeda[idx]} Hri</span>
-                                <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, 1)" class="w-5 h-5 bg-slate-700 rounded text-emerald-400 font-bold">+</button>
+                                <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, -1)" class="w-5 h-5 bg-slate-700 rounded text-red-400 font-bold hover:bg-slate-600">-</button>
+                                <span class="bg-slate-900 px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[50px] text-amber-400">+${pkg.jeda[idx]} H</span>
+                                <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, 1)" class="w-5 h-5 bg-slate-700 rounded text-emerald-400 font-bold hover:bg-slate-600">+</button>
                             </div>
                         `;
                     }
@@ -483,7 +450,7 @@
                     return `
                         <tr class="hover:bg-slate-750/40 border-b border-slate-750 transition text-slate-300">
                             <td class="p-2.5 text-center text-slate-500 font-mono">${idx + 1}</td>
-                            <td class="p-2.5 font-semibold text-slate-200 ${surat.idSurat === 'sj' ? 'text-amber-300 underline underline-offset-4 decoration-amber-500' : ''}">${surat.nama}</td>
+                            <td class="p-2.5 font-semibold text-slate-200">${surat.nama}</td>
                             <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${surat.tipe === 'sekolah' ? 'bg-blue-950 text-blue-400' : 'bg-purple-950 text-purple-400'}">${surat.tipe === 'sekolah' ? '🏛️ Sekolah' : '📦 Rekanan'}</span></td>
                             <td class="p-2.5 text-center font-mono font-bold text-sm"><span class="px-3 py-1 bg-slate-900/80 rounded border border-slate-700 block w-20 mx-auto ${surat.tipe === 'sekolah' ? 'text-amber-400' : 'text-purple-400'}">${finalNo}</span></td>
                             <td class="p-2.5 text-center">${kontrolJedaHtml}</td>
