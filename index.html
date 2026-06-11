@@ -102,20 +102,20 @@
         </div>
     </div>
 
-    <div class="sticky top-0 z-50 max-w-7xl mx-auto mb-6 bg-slate-850/95 backdrop-blur border-b-2 border-emerald-500 p-4 rounded-xl shadow-2xl grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center items-center sm:items-start">
+    <div class="sticky top-0 z-40 max-w-7xl mx-auto mb-8 bg-slate-900 border-b-2 border-emerald-500 py-4 rounded-xl shadow-2xl grid grid-cols-1 md:grid-cols-4 gap-4 px-2">
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center items-center sm:items-start">
             <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🚪 RUANG AKTIF SAAT INI</span>
             <span id="txtRuangAktifBesar" class="text-xl font-black text-white font-mono mt-0.5 tracking-wide">-</span>
         </div>
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📊 Nomor Sekolah Terakhir Terpakai</span>
             <span id="lblTerakhirTerpakai" class="text-xl font-black text-emerald-400 font-mono mt-0.5">-</span>
         </div>
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🔮 Rekomendasi Nomor Selanjutnya</span>
             <span id="lblBerikutnya" class="text-xl font-black text-amber-400 font-mono mt-0.5">-</span>
         </div>
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🏪 Ringkasan Jangkauan Nomor Toko</span>
             <div id="lblTokoRingkasan" class="text-xs font-mono text-slate-300 mt-1 max-h-20 overflow-y-auto space-y-1">
                 <span class="text-slate-500 italic">Belum ada data.</span>
@@ -193,11 +193,10 @@
             </div>
         </div>
 
-        <div id="daftarPaketTabel" class="space-y-6"></div>
+        <div id="daftarPaketTabel" class="space-y-4"></div>
     </div>
 
     <script>
-        // MASTER LIBUR UTAMA 2026
         window.MASTER_LIBUR_DAN_CUTI = {
             "2026-01-01": "Tahun Baru 2026 Masehi",
             "2026-02-17": "Isra Mi'raj Nabi Muhammad SAW",
@@ -218,6 +217,8 @@
         };
 
         window.listAntreanToko = [];
+        // State lokal untuk menyimpan toko mana saja yang sedang dibuka detailnya
+        window.petaTokoTerbuka = window.petaTokoTerbuka || {};
 
         function periksaStatusHari(date) {
             const day = date.getDay();
@@ -265,24 +266,20 @@
             });
         }
 
-        // 🛠️ LOGIKA BARU: SETIAP BARIS BERDIRI SENDIRI MENGIKUTI JEDA DARI BARIS DI ATASNYA MURNI
         function hitungTanggalMajuMurni(startDateStr, jedaArray) {
             let results = [];
             let current = new Date(startDateStr);
             
             jedaArray.forEach((jeda, idx) => {
                 if (idx === 0) {
-                    // Berkas pertama selalu mengikuti tanggal input acuan (skip hari libur jika pas libur)
                     while (periksaStatusHari(current).libur) { current.setDate(current.getDate() + 1); }
                     results.push(new Date(current));
                 } else {
-                    // Maju sebanyak jeda hari kerja dari tanggal baris sebelumnya
                     let sisa = jeda;
                     while (sisa > 0) {
                         current.setDate(current.getDate() + 1);
                         if (!periksaStatusHari(current).libur) sisa--;
                     }
-                    // Pastikan tidak mendarat di hari libur
                     while (periksaStatusHari(current).libur) { current.setDate(current.getDate() + 1); }
                     results.push(new Date(current));
                 }
@@ -334,13 +331,15 @@
 
             let startRekananNo = parseInt(noRekananStr, 10);
             let templateFiltered = MASTER_SURAT_EXCEL.filter(x => !(kategori === 'bawah' && x.hapusDiBawah10Jt));
-            
-            // Default jeda awal: Baris 1 = 0, sisanya maju 1 hari kerja agar rapi di awal.
-            // Nanti user bebas mengubah masing-masing baris menjadi +0 atau berapa saja.
             let jedaDefault = templateFiltered.map((surat, i) => (i === 0) ? 0 : 1);
 
+            const uniqueId = Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            // Default: Toko baru otomatis terbuka biar langsung kelihatan hasilnya
+            window.petaTokoTerbuka[uniqueId] = true;
+
             window.listAntreanToko.push({
-                uniqueId: Date.now() + Math.random().toString(36).substr(2, 5),
+                uniqueId: uniqueId,
                 rekanan: rekanan,
                 kategori: kategori,
                 tglAcuan: tglStr,
@@ -353,20 +352,26 @@
             document.getElementById('inputRekanan').value = '';
         }
 
+        function toggleLipatToko(uniqueId) {
+            window.petaTokoTerbuka[uniqueId] = !window.petaTokoTerbuka[uniqueId];
+            window.renderUlangSemuaTabel(false);
+        }
+
         function ubahJeda(uniqueId, index, nilai) {
             let idxToko = window.listAntreanToko.findIndex(x => x.uniqueId === uniqueId);
             if (idxToko === -1) return;
             let pkg = window.listAntreanToko[idxToko];
-            
-            if (index === 0) return; // Baris acuan utama tidak boleh di-jeda
-            
+            if (index === 0) return;
             pkg.jeda[index] = Math.max(0, pkg.jeda[index] + nilai);
             triggerPushCloud();
         }
 
         function htmlPurgePaket(uniqueId) {
-            window.listAntreanToko = window.listAntreanToko.filter(x => x.uniqueId !== uniqueId);
-            triggerPushCloud();
+            if (confirm("Apakah anda yakin ingin menghapus data toko ini secara permanen dari Cloud?")) {
+                window.listAntreanToko = window.listAntreanToko.filter(x => x.uniqueId !== uniqueId);
+                delete window.petaTokoTerbuka[uniqueId];
+                triggerPushCloud();
+            }
         }
 
         window.renderUlangSemuaTabel = function(allowPushCloud = false) {
@@ -378,7 +383,6 @@
 
             window.listAntreanToko.forEach((pkg) => {
                 let tglList = hitungTanggalMajuMurni(pkg.tglAcuan, pkg.jeda);
-                
                 pkg.template.forEach((surat, idx) => {
                     if (surat.tipe === 'sekolah') {
                         semuaSuratSekolahMurni.push({
@@ -424,54 +428,71 @@
                 };
             });
 
-            window.listAntreanToko.forEach((pkg, indexToko) => {
+            window.listAntreanToko.forEach((pkg) => {
+                let isOpen = window.petaTokoTerbuka[pkg.uniqueId] || false;
+                let rangeObj = petaRangeTokoUntukDashboard[pkg.uniqueId];
                 let tglList = hitungTanggalMajuMurni(pkg.tglAcuan, pkg.jeda);
                 let runningRekananCounter = pkg.startRekananNo;
 
-                let rowsHtml = pkg.template.map((surat, idx) => {
-                    let finalNo = (surat.tipe === 'sekolah') ? (petaNomorSekolahGlobal[`${pkg.uniqueId}-${idx}`] || "-") : runningRekananCounter++;
-                    let checkRealDate = periksaStatusHari(tglList[idx]);
-                    let isRedText = checkRealDate.libur;
+                // 1. KONTEN TABEL DETAIL (Hanya di-render jika status 'isOpen' true)
+                let detailTabelHtml = "";
+                if (isOpen) {
+                    let rowsHtml = pkg.template.map((surat, idx) => {
+                        let finalNo = (surat.tipe === 'sekolah') ? (petaNomorSekolahGlobal[`${pkg.uniqueId}-${idx}`] || "-") : runningRekananCounter++;
+                        let checkRealDate = periksaStatusHari(tglList[idx]);
+                        let isRedText = checkRealDate.libur;
 
-                    let kontrolJedaHtml = "";
-                    if (idx === 0) {
-                        kontrolJedaHtml = `<span class="text-slate-500 text-[11px]">Acuan Utama</span>`;
-                    } else {
-                        // SEMUA BARIS BISA DI-EDIT JEDANYA (+/-) MURNI MANDIRI
-                        kontrolJedaHtml = `
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, -1)" class="w-5 h-5 bg-slate-700 rounded text-red-400 font-bold hover:bg-slate-600">-</button>
-                                <span class="bg-slate-900 px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[50px] text-amber-400">+${pkg.jeda[idx]} H</span>
-                                <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, 1)" class="w-5 h-5 bg-slate-700 rounded text-emerald-400 font-bold hover:bg-slate-600">+</button>
-                            </div>
+                        let kontrolJedaHtml = (idx === 0) 
+                            ? `<span class="text-slate-500 text-[11px]">Acuan Utama</span>`
+                            : `
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, -1)" class="w-5 h-5 bg-slate-700 rounded text-red-400 font-bold hover:bg-slate-600">-</button>
+                                    <span class="bg-slate-900 px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[50px] text-amber-400">+${pkg.jeda[idx]} H</span>
+                                    <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, 1)" class="w-5 h-5 bg-slate-700 rounded text-emerald-400 font-bold hover:bg-slate-600">+</button>
+                                </div>
+                            `;
+
+                        return `
+                            <tr class="hover:bg-slate-750/40 border-b border-slate-750 transition text-slate-300 text-xs">
+                                <td class="p-2.5 text-center text-slate-500 font-mono">${idx + 1}</td>
+                                <td class="p-2.5 font-semibold text-slate-200">${surat.nama}</td>
+                                <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${surat.tipe === 'sekolah' ? 'bg-blue-950 text-blue-400' : 'bg-purple-950 text-purple-400'}">${surat.tipe === 'sekolah' ? '🏛️ Sekolah' : '📦 Rekanan'}</span></td>
+                                <td class="p-2.5 text-center font-mono font-bold text-sm"><span class="px-3 py-1 bg-slate-900/80 rounded border border-slate-700 block w-20 mx-auto ${surat.tipe === 'sekolah' ? 'text-amber-400' : 'text-purple-400'}">${finalNo}</span></td>
+                                <td class="p-2.5 text-center">${kontrolJedaHtml}</td>
+                                <td class="p-2.5 text-center font-medium ${isRedText ? 'text-rose-500 font-bold' : 'text-emerald-400'}">${formatIndo(tglList[idx])} ${isRedText ? `<span class="block text-[10px] text-rose-400 italic">(${checkRealDate.ket})</span>` : ''}</td>
+                            </tr>
                         `;
-                    }
+                    }).join('');
 
-                    return `
-                        <tr class="hover:bg-slate-750/40 border-b border-slate-750 transition text-slate-300">
-                            <td class="p-2.5 text-center text-slate-500 font-mono">${idx + 1}</td>
-                            <td class="p-2.5 font-semibold text-slate-200">${surat.nama}</td>
-                            <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${surat.tipe === 'sekolah' ? 'bg-blue-950 text-blue-400' : 'bg-purple-950 text-purple-400'}">${surat.tipe === 'sekolah' ? '🏛️ Sekolah' : '📦 Rekanan'}</span></td>
-                            <td class="p-2.5 text-center font-mono font-bold text-sm"><span class="px-3 py-1 bg-slate-900/80 rounded border border-slate-700 block w-20 mx-auto ${surat.tipe === 'sekolah' ? 'text-amber-400' : 'text-purple-400'}">${finalNo}</span></td>
-                            <td class="p-2.5 text-center">${kontrolJedaHtml}</td>
-                            <td class="p-2.5 text-center font-medium ${isRedText ? 'text-rose-500 font-bold' : 'text-emerald-400'}">${formatIndo(tglList[idx])} ${isRedText ? `<span class="block text-[10px] text-rose-400 italic">(${checkRealDate.ket})</span>` : ''}</td>
-                        </tr>
+                    detailTabelHtml = `
+                        <div class="p-4 overflow-x-auto border-t border-slate-700 bg-slate-800/50">
+                            <table class="w-full text-left border-collapse">
+                                <thead><tr class="border-b border-slate-700 text-slate-400 bg-slate-900/40 text-xs"><th class="p-2.5 w-10 text-center">No</th><th class="p-2.5">Nama Surat Keluar Pengadaan</th><th class="p-2.5 w-28 text-center">Sumber</th><th class="p-2.5 w-24 text-center">No. Surat</th><th class="p-2.5 w-44 text-center">Atur Manual Jeda</th><th class="p-2.5 w-52 text-center">Tanggal</th></tr></thead>
+                                <tbody>${rowsHtml}</tbody>
+                            </table>
+                        </div>
                     `;
-                }).join('');
+                }
 
+                // 2. HEADER MINIMALIS KOMPAK
                 let div = document.createElement('div');
-                div.className = "bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden mb-6";
+                div.className = "bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden mb-3";
                 div.innerHTML = `
-                    <div class="bg-slate-750 px-5 py-3 flex justify-between items-center bg-slate-900/20">
-                        <div><span class="text-xs bg-blue-900/60 text-blue-300 font-bold px-2.5 py-0.5 rounded border border-blue-800">Toko: ${pkg.rekanan}</span></div>
-                        <button onclick="htmlPurgePaket('${pkg.uniqueId}')" class="text-xs text-red-400">✕ Hapus Toko</button>
+                    <div class="px-4 py-3 sm:py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-slate-800 to-slate-850">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-xs bg-emerald-500/20 text-emerald-400 font-black px-3 py-1 rounded-lg border border-emerald-500/40 font-mono tracking-wide uppercase">🏪 TOKO: ${pkg.rekanan}</span>
+                            <span class="text-[11px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded font-mono">No.Sek: <strong class="text-amber-400">${rangeObj.sekolahRange}</strong></span>
+                            <span class="text-[11px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded font-mono">No.Rek: <strong class="text-purple-400">${rangeObj.rekananRange}</strong></span>
+                            <span class="text-[11px] text-slate-400">(${pkg.kategori === 'bawah' ? 'Under 10Jt' : 'Above 10Jt'})</span>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                            <button onclick="toggleLipatToko('${pkg.uniqueId}')" class="text-xs font-bold px-3 py-1.5 rounded-xl transition ${isOpen ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'}">
+                                ${isOpen ? "📂 Lipat Detail" : "👁️ Buka Detail Tabel"}
+                            </button>
+                            <button onclick="htmlPurgePaket('${pkg.uniqueId}')" class="text-xs text-red-400 hover:text-red-300 bg-red-950/40 p-1.5 rounded-lg border border-red-900/40">✕ Hapus</button>
+                        </div>
                     </div>
-                    <div class="p-4 overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead><tr class="border-b border-slate-700 text-slate-400 bg-slate-900/40"><th class="p-2.5 w-10 text-center">No</th><th class="p-2.5">Nama Surat Keluar Pengadaan</th><th class="p-2.5 w-28 text-center">Sumber</th><th class="p-2.5 w-24 text-center">No. Surat</th><th class="p-2.5 w-44 text-center">Atur Manual Jeda</th><th class="p-2.5 w-52 text-center">Tanggal</th></tr></thead>
-                            <tbody>${rowsHtml}</tbody>
-                        </table>
-                    </div>
+                    ${detailTabelHtml}
                 `;
                 container.appendChild(div);
             });
