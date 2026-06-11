@@ -10,9 +10,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ==========================================
-        // 🛠️ KODE FIREBASE ASLI MILIK KAKAK (SUDAH AKTIF)
-        // ==========================================
+        // Konfigurasi Firebase Asli Milik Kakak
         const firebaseConfig = {
             apiKey: "AIzaSyDmflJzUXqatazCkalioY51bmOKYhiALuo",
             authDomain: "surat-sekolah-bop.firebaseapp.com",
@@ -27,20 +25,33 @@
         
         let unsubscribeRealtime = null;
 
-        // Fungsi Utama untuk Pindah ke Ruang Kerja Sekolah Tertentu
+        // Fungsi Utama untuk Pindah ke Ruang Kerja via Klik Tombol
         window.hubungkanKeWorkspaceCloud = function(workspaceId) {
             if (!workspaceId) return;
             
-            // Putuskan koneksi ruang sebelumnya jika ada
             if (unsubscribeRealtime) unsubscribeRealtime();
 
-            // Kunci dokumen database spesifik berdasarkan Nama Ruang/Sekolah
+            // Highlight tombol yang sedang aktif, matikan highlight tombol lainnya
+            const daftarRuang = ['unggul', 'manggala', 'tebet01', 'pasming01', 'serasi', 'kartini', 'xxii', 'xiv'];
+            daftarRuang.forEach(r => {
+                const btn = document.getElementById(`btn-room-${r}`);
+                if (btn) {
+                    if (r === workspaceId.toLowerCase()) {
+                        btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-3 rounded-xl text-xs transition shadow-lg border-2 border-emerald-400 text-center uppercase tracking-wider font-mono";
+                    } else {
+                        btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 py-3 rounded-xl text-xs transition border border-slate-700 text-center uppercase tracking-wider font-mono";
+                    }
+                }
+            });
+
+            // Kunci dokumen database berdasarkan nama ruang yang diklik
             const docRef = doc(db, "bop_multi_school", workspaceId.toLowerCase().trim());
             
-            // Tampilkan status koneksi di UI
-            document.getElementById('statusKoneksiCloud').innerHTML = `🟢 Terhubung ke Ruang: <strong class="text-amber-400 font-mono uppercase">${workspaceId}</strong>`;
+            // Perbarui teks status ruang aktif di layar utama
+            document.getElementById('txtRuangAktifBesar').innerText = workspaceId.toUpperCase();
+            document.getElementById('statusKoneksiCloud').innerHTML = `🟢 Sinkronisasi Cloud Aktif untuk Ruang: <strong class="text-emerald-400 font-mono uppercase">${workspaceId}</strong>`;
 
-            // Aktifkan pemantauan data realtime khusus ruang ini
+            // Pantau data realtime khusus ruang yang dipilih
             unsubscribeRealtime = onSnapshot(docRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
@@ -51,7 +62,7 @@
                     window.renderDaftarCutiDashboard();
                     window.renderUlangSemuaTabel(false);
                 } else {
-                    // Jika ruang baru dibuat dan belum ada datanya di cloud, reset tampilan ke awal
+                    // Jika ruang kosong/baru diakses pertama kali
                     window.listAntreanToko = [];
                     document.getElementById('noSekolahAbsoluteBase').value = 1;
                     window.renderUlangSemuaTabel(false);
@@ -73,47 +84,58 @@
             };
         };
 
-        // Otomatis hubungkan ke ruang 'default' saat pertama kali web dibuka
+        // Otomatis arahkan ke ruang 'Unggul' sebagai gerbang awal saat web pertama dibuka
         window.addEventListener('DOMContentLoaded', () => {
-            window.hubungkanKeWorkspaceCloud('default');
+            window.hubungkanKeWorkspaceCloud('unggul');
         });
     </script>
 </head>
 <body class="bg-slate-900 font-sans min-h-screen p-4 md:p-8 text-slate-100 pb-32">
 
-    <div class="max-w-7xl mx-auto mb-4 bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="space-y-1 text-center sm:text-left">
-            <h3 class="text-sm font-bold text-slate-200">🔑 Multi-School Workspace System</h3>
-            <p class="text-xs text-slate-400">Ketik kode sekolah Kakak untuk masuk ke database mandiri masing-masing.</p>
+    <div class="max-w-7xl mx-auto mb-6 bg-slate-850 border-2 border-slate-700 p-5 rounded-2xl shadow-xl space-y-4">
+        <div class="text-center sm:text-left border-b border-slate-700 pb-3">
+            <h3 class="text-base font-bold text-amber-400 flex items-center gap-2 justify-center sm:justify-start">
+                <span>🔑</span> SILAKAN PILIH RUANG KERJA SEKOLAH / GRUP ANDA:
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Klik salah satu kotak di bawah untuk memuat dan mengedit database secara mandiri.</p>
         </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-            <input type="text" id="inputWorkspaceId" value="default" placeholder="Contoh: paud-bintang" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono uppercase font-bold text-amber-400 focus:outline-none w-full sm:w-48 text-center">
-            <button onclick="window.hubungkanKeWorkspaceCloud(document.getElementById('inputWorkspaceId').value)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-1.5 rounded-lg text-xs transition shadow">
-                Masuk Ruang
-            </button>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <button id="btn-room-unggul" onclick="window.hubungkanKeWorkspaceCloud('unggul')">Unggul</button>
+            <button id="btn-room-manggala" onclick="window.hubungkanKeWorkspaceCloud('manggala')">Manggala</button>
+            <button id="btn-room-tebet01" onclick="window.hubungkanKeWorkspaceCloud('tebet01')">Tebet01</button>
+            <button id="btn-room-pasming01" onclick="window.hubungkanKeWorkspaceCloud('pasming01')">Pasming01</button>
+            <button id="btn-room-serasi" onclick="window.hubungkanKeWorkspaceCloud('serasi')">Serasi</button>
+            <button id="btn-room-kartini" onclick="window.hubungkanKeWorkspaceCloud('kartini')">Kartini</button>
+            <button id="btn-room-xxii" onclick="window.hubungkanKeWorkspaceCloud('xxii')">XXII</button>
+            <button id="btn-room-xiv" onclick="window.hubungkanKeWorkspaceCloud('xiv')">XIV</button>
         </div>
     </div>
 
-    <div class="sticky top-0 z-50 max-w-7xl mx-auto mb-6 bg-slate-850/95 backdrop-blur border-b-2 border-emerald-500 p-4 rounded-xl shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="sticky top-0 z-50 max-w-7xl mx-auto mb-6 bg-slate-850/95 backdrop-blur border-b-2 border-emerald-500 p-4 rounded-xl shadow-2xl grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center items-center sm:items-start">
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🚪 RUANG AKTIF SAAT INI</span>
+            <span id="txtRuangAktifBesar" class="text-xl font-black text-white font-mono mt-0.5 tracking-wide">-</span>
+        </div>
         <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📊 Nomor Sekolah Terakhir Terpakai</span>
-            <span id="lblTerakhirTerpakai" class="text-2xl font-black text-emerald-400 font-mono mt-0.5">-</span>
+            <span id="lblTerakhirTerpakai" class="text-xl font-black text-emerald-400 font-mono mt-0.5">-</span>
         </div>
         <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🔮 Rekomendasi Nomor Selanjutnya</span>
-            <span id="lblBerikutnya" class="text-2xl font-black text-amber-400 font-mono mt-0.5">-</span>
+            <span id="lblBerikutnya" class="text-xl font-black text-amber-400 font-mono mt-0.5">-</span>
         </div>
         <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🏪 Ringkasan Jangkauan Nomor Toko</span>
             <div id="lblTokoRingkasan" class="text-xs font-mono text-slate-300 mt-1 max-h-20 overflow-y-auto space-y-1">
-                <span class="text-slate-500 italic">Belum ada data di cloud.</span>
+                <span class="text-slate-500 italic">Belum ada data.</span>
             </div>
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
         <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-            <h1 class="text-2xl font-bold text-emerald-400 text-center">Sistem Buku Kendali Keuangan BOP - Multi Sekolah</h1>
+            <h1 class="text-xl font-bold text-emerald-400 text-center">Sistem Buku Kendali Keuangan BOP</h1>
             <p id="statusKoneksiCloud" class="text-xs text-slate-400 text-center mt-1">Menghubungkan ke Cloud Database...</p>
         </div>
 
@@ -158,7 +180,7 @@
                 <div class="pt-3">
                     <div id="notifError" class="hidden p-2.5 bg-red-900/40 border border-red-800 text-red-300 text-xs rounded-xl font-medium mb-2"></div>
                     <button onclick="prosesGenerate()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg tracking-wide">
-                        ➕ Tambahkan Toko & Sinkronkan ke Cloud Sekolah
+                        ➕ Tambahkan Toko & Sinkronkan ke Cloud
                     </button>
                 </div>
             </div>
@@ -185,7 +207,7 @@
     </div>
 
     <script>
-        // MASTER LIBUR UTAMA 2026 (SUDAH DIPERBAIKI SINKRON JUNI 2026)
+        // MASTER LIBUR UTAMA 2026
         window.MASTER_LIBUR_DAN_CUTI = {
             "2026-01-01": "Tahun Baru 2026 Masehi",
             "2026-02-17": "Isra Mi'raj Nabi Muhammad SAW",
