@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Kendali BOP Keuangan - Multi Workspace Cloud</title>
+    <title>Sistem Penomoran Surat Untuk BOP - Multi Workspace Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- FIREBASE SDK -->
@@ -11,7 +11,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Konfigurasi Firebase Asli Milik Kakak
+        // Konfigurasi Firebase Asli
         const firebaseConfig = {
             apiKey: "AIzaSyDmflJzUXqatazCkalioY51bmOKYhiALuo",
             authDomain: "surat-sekolah-bop.firebaseapp.com",
@@ -126,9 +126,9 @@
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <!-- HEADER -->
+        <!-- HEADER APPLIKASI -->
         <div class="bg-slate-800 p-5 rounded-2xl shadow-xl border border-slate-700">
-            <h1 class="text-xl font-bold text-emerald-400 text-center">Sistem Buku Kendali Keuangan BOP</h1>
+            <h1 class="text-xl font-bold text-emerald-400 text-center">Sistem Penomoran Surat Untuk BOP</h1>
             <p id="statusKoneksiCloud" class="text-xs text-slate-400 text-center mt-1">Menghubungkan ke Cloud Database...</p>
         </div>
 
@@ -142,8 +142,8 @@
                     
                     <div class="p-3 bg-slate-950 rounded-xl border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div>
-                            <span class="text-xs text-emerald-400 font-bold uppercase font-mono tracking-wider block">🛡️ NOMOR AWAL BUKU KENDALI BOP:</span>
-                            <p class="text-[10px] text-slate-400">Titik awal nomor urut berkas sekolah ruang aktif.</p>
+                            <span class="text-xs text-emerald-400 font-bold uppercase font-mono tracking-wider block">🛡️ NOMOR AWAL SURAT SEKOLAH BOP:</span>
+                            <p class="text-[10px] text-amber-300/80 italic font-semibold mt-0.5">⚠️ Cukup diatur sekali di awal untuk nomor surat pertama sekolah.</p>
                         </div>
                         <input type="number" id="noSekolahAbsoluteBase" value="1" onchange="triggerPushCloud()" class="w-20 bg-slate-900 border-2 border-emerald-500 text-center rounded-lg px-2 py-0.5 text-sm font-mono font-bold text-emerald-400 focus:outline-none">
                     </div>
@@ -165,7 +165,7 @@
                             <input type="date" id="tglUtama" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">No. Rekanan Awal</label>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">No. Rekanan Awal Toko Ini</label>
                             <input type="number" id="noRekananAwal" value="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
                         </div>
                     </div>
@@ -198,8 +198,8 @@
             </div>
         </div>
 
-        <!-- 📦 KOTAK DAFTAR TOKO (GRID LAYOUT 2 KOLOM) -->
-        <div id="daftarPaketTabel" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        <!-- 📦 KOTAK DAFTAR TOKO (GRID LAYOUT 3 KOLOM) -->
+        <div id="daftarPaketTabel" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
     </div>
 
     <script>
@@ -382,6 +382,7 @@
             container.innerHTML = "";
 
             let initialBaseNo = parseInt(document.getElementById('noSekolahAbsoluteBase').value, 10) || 1;
+            
             let semuaSuratSekolahMurni = [];
 
             window.listAntreanToko.forEach((pkg) => {
@@ -437,7 +438,6 @@
                 let tglList = hitungTanggalMajuMurni(pkg.tglAcuan, pkg.jeda);
                 let runningRekananCounter = pkg.startRekananNo;
 
-                // VARIABEL AKSEN WARNA ELEGAN (ELEGAN & TIDAK ALAY/COLOURFUL)
                 const isUnder10 = (pkg.kategori === 'bawah');
                 const borderAccent = isUnder10 ? 'border-emerald-500/50' : 'border-sky-500/50';
                 const tagBg = isUnder10 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-sky-500/10 text-sky-400 border-sky-500/30';
@@ -482,12 +482,10 @@
                     `;
                 }
 
-                // UI KOTAK GRID CARD LENGKAP & ELEGAN
                 let div = document.createElement('div');
-                div.className = `bg-slate-800 rounded-2xl shadow-lg border-2 ${borderAccent} overflow-hidden ${isOpen ? 'md:col-span-2' : ''} transition-all duration-200`;
+                div.className = `bg-slate-800 rounded-2xl shadow-lg border-2 ${borderAccent} overflow-hidden ${isOpen ? 'md:col-span-3' : ''} transition-all duration-200`;
                 div.innerHTML = `
                     <div class="p-3.5 flex flex-col gap-2.5 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-850">
-                        <!-- BARIS ATAS: NAMA TOKO & CATEGORY BADGE -->
                         <div class="flex items-center justify-between gap-2 border-b border-slate-700/60 pb-2">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 <span class="text-xs ${tagBg} font-black px-2.5 py-1 rounded-lg border font-mono tracking-wide uppercase truncate">
@@ -502,7 +500,6 @@
                             </button>
                         </div>
 
-                        <!-- BARIS TENGAH: RINGKASAN NOMOR SEKOLAH & REKANAN -->
                         <div class="flex items-center justify-between text-xs font-mono bg-slate-900/80 p-2 rounded-xl border border-slate-750">
                             <div class="flex items-center gap-1">
                                 <span class="text-slate-400 text-[11px]">Sekolah:</span>
@@ -514,7 +511,6 @@
                             </div>
                         </div>
 
-                        <!-- BARIS BAWAH: TOMBOL BUKA/LIPAT DETAIL -->
                         <button onclick="toggleLipatToko('${pkg.uniqueId}')" class="w-full text-xs font-bold py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 ${isOpen ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700/80 hover:bg-slate-650 text-slate-200 border border-slate-600/50'}">
                             <span>${isOpen ? "📂 Lipat Detail Tabel" : "👁️ Buka Detail Tabel"}</span>
                         </button>
