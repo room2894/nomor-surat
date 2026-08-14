@@ -6,6 +6,7 @@
     <title>Sistem Kendali BOP Keuangan - Multi Workspace Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- FIREBASE SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -34,9 +35,9 @@
                 const btn = document.getElementById(`btn-room-${r}`);
                 if (btn) {
                     if (r === workspaceId.toLowerCase()) {
-                        btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-3 rounded-xl text-xs transition shadow-lg border-2 border-emerald-400 text-center uppercase tracking-wider font-mono";
+                        btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl text-xs transition shadow-lg border-2 border-emerald-400 text-center uppercase tracking-wider font-mono";
                     } else {
-                        btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 py-3 rounded-xl text-xs transition border border-slate-700 text-center uppercase tracking-wider font-mono";
+                        btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 py-2.5 rounded-xl text-xs transition border border-slate-700 text-center uppercase tracking-wider font-mono";
                     }
                 }
             });
@@ -82,15 +83,15 @@
 </head>
 <body class="bg-slate-900 font-sans min-h-screen p-4 md:p-8 text-slate-100 pb-32">
 
-    <div class="max-w-7xl mx-auto mb-6 bg-slate-850 border-2 border-slate-700 p-5 rounded-2xl shadow-xl space-y-4">
-        <div class="text-center sm:text-left border-b border-slate-700 pb-3">
-            <h3 class="text-base font-bold text-amber-400 flex items-center gap-2 justify-center sm:justify-start">
+    <!-- 🚪 PANEL GERBANG RUANG KERJA -->
+    <div class="max-w-7xl mx-auto mb-6 bg-slate-850 border border-slate-700 p-4 rounded-2xl shadow-xl space-y-3">
+        <div class="text-center sm:text-left border-b border-slate-700 pb-2">
+            <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2 justify-center sm:justify-start">
                 <span>🔑</span> SILAKAN PILIH RUANG KERJA SEKOLAH / GRUP ANDA:
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Klik salah satu kotak di bawah untuk memuat dan mengedit database secara mandiri.</p>
         </div>
         
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <button id="btn-room-unggul" onclick="window.hubungkanKeWorkspaceCloud('unggul')">Unggul</button>
             <button id="btn-room-manggala" onclick="window.hubungkanKeWorkspaceCloud('manggala')">Manggala</button>
             <button id="btn-room-tebet01" onclick="window.hubungkanKeWorkspaceCloud('tebet01')">Tebet01</button>
@@ -102,20 +103,21 @@
         </div>
     </div>
 
-    <div class="sticky top-0 z-40 max-w-7xl mx-auto mb-8 bg-slate-900 border-b-2 border-emerald-500 py-4 rounded-xl shadow-2xl grid grid-cols-1 md:grid-cols-4 gap-4 px-2">
-        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center items-center sm:items-start">
+    <!-- 📊 PANEL STATUS DASHBOARD -->
+    <div class="max-w-7xl mx-auto mb-6 bg-slate-850 border-b-2 border-emerald-500 p-4 rounded-xl shadow-xl grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex flex-col justify-center items-center sm:items-start">
             <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🚪 RUANG AKTIF SAAT INI</span>
             <span id="txtRuangAktifBesar" class="text-xl font-black text-white font-mono mt-0.5 tracking-wide">-</span>
         </div>
-        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center">
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">📊 Nomor Sekolah Terakhir Terpakai</span>
             <span id="lblTerakhirTerpakai" class="text-xl font-black text-emerald-400 font-mono mt-0.5">-</span>
         </div>
-        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center">
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🔮 Rekomendasi Nomor Selanjutnya</span>
             <span id="lblBerikutnya" class="text-xl font-black text-amber-400 font-mono mt-0.5">-</span>
         </div>
-        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col justify-center">
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex flex-col justify-center">
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🏪 Ringkasan Jangkauan Nomor Toko</span>
             <div id="lblTokoRingkasan" class="text-xs font-mono text-slate-300 mt-1 max-h-20 overflow-y-auto space-y-1">
                 <span class="text-slate-500 italic">Belum ada data.</span>
@@ -124,13 +126,15 @@
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+        <!-- HEADER -->
+        <div class="bg-slate-800 p-5 rounded-2xl shadow-xl border border-slate-700">
             <h1 class="text-xl font-bold text-emerald-400 text-center">Sistem Buku Kendali Keuangan BOP</h1>
             <p id="statusKoneksiCloud" class="text-xs text-slate-400 text-center mt-1">Menghubungkan ke Cloud Database...</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+            <!-- INPUT PANEL PENGADAAN -->
+            <div class="lg:col-span-2 bg-slate-800 p-5 rounded-2xl shadow-xl border border-slate-700 space-y-4 flex flex-col justify-between">
                 <div>
                     <h2 class="text-base font-bold text-slate-200 flex items-center gap-2 mb-3">
                         <span>⚙️</span> Parameter Input Pengadaan Baru
@@ -175,7 +179,8 @@
                 </div>
             </div>
 
-            <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 flex flex-col justify-between">
+            <!-- KUSTOMISASI CUTI BERSAMA -->
+            <div class="bg-slate-800 p-5 rounded-2xl shadow-xl border border-slate-700 flex flex-col justify-between">
                 <div>
                     <h2 class="text-base font-bold text-slate-200 flex items-center gap-2 mb-1">
                         <span>📅</span> Kustomisasi Hari Libur / Cuti
@@ -193,7 +198,8 @@
             </div>
         </div>
 
-        <div id="daftarPaketTabel" class="space-y-4"></div>
+        <!-- 📦 KOTAK DAFTAR TOKO (GRID LAYOUT 2 KOLOM) -->
+        <div id="daftarPaketTabel" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
     <script>
@@ -217,7 +223,6 @@
         };
 
         window.listAntreanToko = [];
-        // State lokal untuk menyimpan toko mana saja yang sedang dibuka detailnya
         window.petaTokoTerbuka = window.petaTokoTerbuka || {};
 
         function periksaStatusHari(date) {
@@ -334,8 +339,6 @@
             let jedaDefault = templateFiltered.map((surat, i) => (i === 0) ? 0 : 1);
 
             const uniqueId = Date.now() + Math.random().toString(36).substr(2, 5);
-            
-            // Default: Toko baru otomatis terbuka biar langsung kelihatan hasilnya
             window.petaTokoTerbuka[uniqueId] = true;
 
             window.listAntreanToko.push({
@@ -434,7 +437,12 @@
                 let tglList = hitungTanggalMajuMurni(pkg.tglAcuan, pkg.jeda);
                 let runningRekananCounter = pkg.startRekananNo;
 
-                // 1. KONTEN TABEL DETAIL (Hanya di-render jika status 'isOpen' true)
+                // VARIABEL AKSEN WARNA ELEGAN (ELEGAN & TIDAK ALAY/COLOURFUL)
+                const isUnder10 = (pkg.kategori === 'bawah');
+                const borderAccent = isUnder10 ? 'border-emerald-500/50' : 'border-sky-500/50';
+                const tagBg = isUnder10 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-sky-500/10 text-sky-400 border-sky-500/30';
+                const categoryLabel = isUnder10 ? '<10Jt' : '>10Jt';
+
                 let detailTabelHtml = "";
                 if (isOpen) {
                     let rowsHtml = pkg.template.map((surat, idx) => {
@@ -445,52 +453,71 @@
                         let kontrolJedaHtml = (idx === 0) 
                             ? `<span class="text-slate-500 text-[11px]">Acuan Utama</span>`
                             : `
-                                <div class="flex items-center justify-center gap-1.5">
+                                <div class="flex items-center justify-center gap-1">
                                     <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, -1)" class="w-5 h-5 bg-slate-700 rounded text-red-400 font-bold hover:bg-slate-600">-</button>
-                                    <span class="bg-slate-900 px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[50px] text-amber-400">+${pkg.jeda[idx]} H</span>
+                                    <span class="bg-slate-900 px-1.5 py-0.5 rounded text-[11px] font-mono font-bold min-w-[42px] text-amber-400">+${pkg.jeda[idx]}H</span>
                                     <button onclick="ubahJeda('${pkg.uniqueId}', ${idx}, 1)" class="w-5 h-5 bg-slate-700 rounded text-emerald-400 font-bold hover:bg-slate-600">+</button>
                                 </div>
                             `;
 
                         return `
-                            <tr class="hover:bg-slate-750/40 border-b border-slate-750 transition text-slate-300 text-xs">
-                                <td class="p-2.5 text-center text-slate-500 font-mono">${idx + 1}</td>
-                                <td class="p-2.5 font-semibold text-slate-200">${surat.nama}</td>
-                                <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${surat.tipe === 'sekolah' ? 'bg-blue-950 text-blue-400' : 'bg-purple-950 text-purple-400'}">${surat.tipe === 'sekolah' ? '🏛️ Sekolah' : '📦 Rekanan'}</span></td>
-                                <td class="p-2.5 text-center font-mono font-bold text-sm"><span class="px-3 py-1 bg-slate-900/80 rounded border border-slate-700 block w-20 mx-auto ${surat.tipe === 'sekolah' ? 'text-amber-400' : 'text-purple-400'}">${finalNo}</span></td>
-                                <td class="p-2.5 text-center">${kontrolJedaHtml}</td>
-                                <td class="p-2.5 text-center font-medium ${isRedText ? 'text-rose-500 font-bold' : 'text-emerald-400'}">${formatIndo(tglList[idx])} ${isRedText ? `<span class="block text-[10px] text-rose-400 italic">(${checkRealDate.ket})</span>` : ''}</td>
+                            <tr class="hover:bg-slate-750/40 border-b border-slate-750 transition text-slate-300 text-[11px]">
+                                <td class="p-2 text-center text-slate-500 font-mono">${idx + 1}</td>
+                                <td class="p-2 font-semibold text-slate-200">${surat.nama}</td>
+                                <td class="p-2 text-center"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${surat.tipe === 'sekolah' ? 'bg-blue-950 text-blue-400 border border-blue-800/50' : 'bg-purple-950 text-purple-400 border border-purple-800/50'}">${surat.tipe === 'sekolah' ? 'Sekolah' : 'Rekanan'}</span></td>
+                                <td class="p-2 text-center font-mono font-bold"><span class="px-2 py-0.5 bg-slate-900/80 rounded border border-slate-700 block w-16 mx-auto ${surat.tipe === 'sekolah' ? 'text-amber-400' : 'text-purple-400'}">${finalNo}</span></td>
+                                <td class="p-2 text-center">${kontrolJedaHtml}</td>
+                                <td class="p-2 text-center font-medium ${isRedText ? 'text-rose-500 font-bold' : 'text-emerald-400'}">${formatIndo(tglList[idx])} ${isRedText ? `<span class="block text-[9px] text-rose-400 italic">(${checkRealDate.ket})</span>` : ''}</td>
                             </tr>
                         `;
                     }).join('');
 
                     detailTabelHtml = `
-                        <div class="p-4 overflow-x-auto border-t border-slate-700 bg-slate-800/50">
+                        <div class="p-3 overflow-x-auto border-t border-slate-700 bg-slate-900/70">
                             <table class="w-full text-left border-collapse">
-                                <thead><tr class="border-b border-slate-700 text-slate-400 bg-slate-900/40 text-xs"><th class="p-2.5 w-10 text-center">No</th><th class="p-2.5">Nama Surat Keluar Pengadaan</th><th class="p-2.5 w-28 text-center">Sumber</th><th class="p-2.5 w-24 text-center">No. Surat</th><th class="p-2.5 w-44 text-center">Atur Manual Jeda</th><th class="p-2.5 w-52 text-center">Tanggal</th></tr></thead>
+                                <thead><tr class="border-b border-slate-700 text-slate-400 bg-slate-950/60 text-[10px] uppercase font-mono"><th class="p-2 w-8 text-center">No</th><th class="p-2">Nama Surat</th><th class="p-2 w-20 text-center">Sumber</th><th class="p-2 w-20 text-center">No.Surat</th><th class="p-2 w-32 text-center">Jeda</th><th class="p-2 w-44 text-center">Tanggal</th></tr></thead>
                                 <tbody>${rowsHtml}</tbody>
                             </table>
                         </div>
                     `;
                 }
 
-                // 2. HEADER MINIMALIS KOMPAK
+                // UI KOTAK GRID CARD LENGKAP & ELEGAN
                 let div = document.createElement('div');
-                div.className = "bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden mb-3";
+                div.className = `bg-slate-800 rounded-2xl shadow-lg border-2 ${borderAccent} overflow-hidden ${isOpen ? 'md:col-span-2' : ''} transition-all duration-200`;
                 div.innerHTML = `
-                    <div class="px-4 py-3 sm:py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-slate-800 to-slate-850">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-xs bg-emerald-500/20 text-emerald-400 font-black px-3 py-1 rounded-lg border border-emerald-500/40 font-mono tracking-wide uppercase">🏪 TOKO: ${pkg.rekanan}</span>
-                            <span class="text-[11px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded font-mono">No.Sek: <strong class="text-amber-400">${rangeObj.sekolahRange}</strong></span>
-                            <span class="text-[11px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded font-mono">No.Rek: <strong class="text-purple-400">${rangeObj.rekananRange}</strong></span>
-                            <span class="text-[11px] text-slate-400">(${pkg.kategori === 'bawah' ? 'Under 10Jt' : 'Above 10Jt'})</span>
-                        </div>
-                        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                            <button onclick="toggleLipatToko('${pkg.uniqueId}')" class="text-xs font-bold px-3 py-1.5 rounded-xl transition ${isOpen ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'}">
-                                ${isOpen ? "📂 Lipat Detail" : "👁️ Buka Detail Tabel"}
+                    <div class="p-3.5 flex flex-col gap-2.5 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-850">
+                        <!-- BARIS ATAS: NAMA TOKO & CATEGORY BADGE -->
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-700/60 pb-2">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="text-xs ${tagBg} font-black px-2.5 py-1 rounded-lg border font-mono tracking-wide uppercase truncate">
+                                    🏪 ${pkg.rekanan}
+                                </span>
+                                <span class="text-[10px] ${tagBg} px-1.5 py-0.5 rounded font-bold border uppercase font-mono">
+                                    ${categoryLabel}
+                                </span>
+                            </div>
+                            <button onclick="htmlPurgePaket('${pkg.uniqueId}')" class="text-[11px] text-red-400 hover:text-red-300 bg-red-950/30 hover:bg-red-900/50 px-2 py-0.5 rounded border border-red-900/40 transition">
+                                ✕ Hapus
                             </button>
-                            <button onclick="htmlPurgePaket('${pkg.uniqueId}')" class="text-xs text-red-400 hover:text-red-300 bg-red-950/40 p-1.5 rounded-lg border border-red-900/40">✕ Hapus</button>
                         </div>
+
+                        <!-- BARIS TENGAH: RINGKASAN NOMOR SEKOLAH & REKANAN -->
+                        <div class="flex items-center justify-between text-xs font-mono bg-slate-900/80 p-2 rounded-xl border border-slate-750">
+                            <div class="flex items-center gap-1">
+                                <span class="text-slate-400 text-[11px]">Sekolah:</span>
+                                <span class="text-amber-400 font-bold bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-800/40">${rangeObj.sekolahRange}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-slate-400 text-[11px]">Rekanan:</span>
+                                <span class="text-purple-400 font-bold bg-purple-950/40 px-1.5 py-0.5 rounded border border-purple-800/40">${rangeObj.rekananRange}</span>
+                            </div>
+                        </div>
+
+                        <!-- BARIS BAWAH: TOMBOL BUKA/LIPAT DETAIL -->
+                        <button onclick="toggleLipatToko('${pkg.uniqueId}')" class="w-full text-xs font-bold py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 ${isOpen ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700/80 hover:bg-slate-650 text-slate-200 border border-slate-600/50'}">
+                            <span>${isOpen ? "📂 Lipat Detail Tabel" : "👁️ Buka Detail Tabel"}</span>
+                        </button>
                     </div>
                     ${detailTabelHtml}
                 `;
